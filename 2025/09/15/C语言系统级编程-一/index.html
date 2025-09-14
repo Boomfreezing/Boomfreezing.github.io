@@ -1,0 +1,389 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>C语言系统级编程(一) | Boomfreezing</title><meta name="author" content="Boom_freezing"><meta name="copyright" content="Boom_freezing"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="“我们真的理解C语言吗？”——C语言标准背后的设计思想……">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C语言系统级编程(一)">
+<meta property="og:url" content="http://boomfreezing.github.io/2025/09/15/C%E8%AF%AD%E8%A8%80%E7%B3%BB%E7%BB%9F%E7%BA%A7%E7%BC%96%E7%A8%8B-%E4%B8%80/index.html">
+<meta property="og:site_name" content="Boomfreezing">
+<meta property="og:description" content="“我们真的理解C语言吗？”——C语言标准背后的设计思想……">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://boomfreezing.github.io/images/C_SYS_1/cover.jpg">
+<meta property="article:published_time" content="2025-09-14T16:04:25.000Z">
+<meta property="article:modified_time" content="2025-09-14T16:32:39.923Z">
+<meta property="article:author" content="Boom_freezing">
+<meta property="article:tag" content="C语言">
+<meta property="article:tag" content="对象">
+<meta property="article:tag" content="类型">
+<meta property="article:tag" content="数组">
+<meta property="article:tag" content="指针">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://boomfreezing.github.io/images/C_SYS_1/cover.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "C语言系统级编程(一)",
+  "url": "http://boomfreezing.github.io/2025/09/15/C%E8%AF%AD%E8%A8%80%E7%B3%BB%E7%BB%9F%E7%BA%A7%E7%BC%96%E7%A8%8B-%E4%B8%80/",
+  "image": "http://boomfreezing.github.io/images/C_SYS_1/cover.jpg",
+  "datePublished": "2025-09-14T16:04:25.000Z",
+  "dateModified": "2025-09-14T16:32:39.923Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Boom_freezing",
+      "url": "http://boomfreezing.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/head.jpg"><link rel="canonical" href="http://boomfreezing.github.io/2025/09/15/C%E8%AF%AD%E8%A8%80%E7%B3%BB%E7%BB%9F%E7%BA%A7%E7%BC%96%E7%A8%8B-%E4%B8%80/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":10,"highlightFullpage":true,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'C语言系统级编程(一)',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/custom.css" media="defer" onload="this.media='all'"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/img/header.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/head.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">17</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives"><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories"><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags"><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link"><span> 友情链接</span></a></div><div class="menus_item"><a class="site-page" href="/about"><span> 关于我</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/images/C_SYS_1/cover.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Boomfreezing</span></a><a class="nav-page-title" href="/"><span class="site-name">C语言系统级编程(一)</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives"><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories"><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags"><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link"><span> 友情链接</span></a></div><div class="menus_item"><a class="site-page" href="/about"><span> 关于我</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">C语言系统级编程(一)</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-09-14T16:04:25.000Z" title="发表于 2025-09-15 00:04:25">2025-09-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-09-14T16:32:39.923Z" title="更新于 2025-09-15 00:32:39">2025-09-15</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/C%E7%B3%BB%E7%BB%9F/">C系统</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">3.5k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>11分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="C语言系统级课程-一"><a href="#C语言系统级课程-一" class="headerlink" title="C语言系统级课程(一)"></a>C语言系统级课程(一)</h1><div style="text-align: right;">作者：弎轮轟</div>
+
+<hr>
+<h2 id="一-从几个问题引入"><a href="#一-从几个问题引入" class="headerlink" title="一.从几个问题引入"></a>一.从几个问题引入</h2><h3 id="1-变量"><a href="#1-变量" class="headerlink" title="1.变量"></a>1.变量</h3><p><code>const</code>关键字：用于声明一个<strong>只读变量</strong>，表示一旦被初始化就不可被改变(所以必须在初始化时赋初值)</p>
+<p><code>volatile</code>关键字：阻止编译器优化代码，因为所修饰的变量有可能被硬件或其他线程等未知方式改变，每次访问所修饰变量都需要从内存读取，而不是寄存器，举个例子：</p>
+<ul>
+<li>想象你在看一本电子书(<strong>变量</strong>)，你觉得内容不会变，就把关键内容记在脑子(<strong>寄存器缓存</strong>)里。但这本书是本 “活书”，可能被别人偷偷涂改(<strong>硬件 &#x2F; 其他线程</strong>)<ul>
+<li>没有<code>volatile</code>时：编译器会优化成 “直接用脑子里的内容”，即使书的内容已经变了，你看到的还是旧内容</li>
+<li>有<code>volatile</code>时：编译器会强制你 “每次都重新翻书看”，确保你总能拿到最新内容</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> a = <span class="number">0</span>;	<span class="comment">//可修改</span></span><br><span class="line"><span class="type">const</span> <span class="type">int</span> b = <span class="number">0</span>;	<span class="comment">//只读，不可修改</span></span><br><span class="line"><span class="type">const</span> <span class="keyword">volatile</span> <span class="type">int</span> c = <span class="number">0</span>;	<span class="comment">//只读，但可能被未知方式修改</span></span><br><span class="line"><span class="type">int</span> d[<span class="number">10</span>] = &#123;<span class="number">0</span>&#125;;	<span class="comment">//d本身不可修改，数组元素d[x]可修改</span></span><br><span class="line"><span class="type">const</span> <span class="type">int</span> e[<span class="number">10</span>] = &#123;<span class="number">0</span>&#125;;	<span class="comment">//e本身和数组元素e[y]都不可修改</span></span><br><span class="line"><span class="type">const</span> <span class="keyword">volatile</span> <span class="type">int</span> f[<span class="number">10</span>] = &#123;<span class="number">0</span>&#125;;	<span class="comment">//f本身不可修改，数组元素f[z]可能被未知方式修改</span></span><br></pre></td></tr></table></figure>
+
+<p>对于以上几行代码，所谓“变量”值有时<strong>能改</strong>有时<strong>不能改</strong>，那么这时候称它们为“变量[Variable]“是否还恰当？</p>
+<p>答案：标准文本并没有“变量[Variable]“这一概念</p>
+<h3 id="2-整数常量"><a href="#2-整数常量" class="headerlink" title="2.整数常量"></a>2.整数常量</h3><blockquote>
+<p>10 是不是整数常量？ ——整数常量</p>
+<p>+10 是不是整数常量？ ——常量表达式</p>
+<p>(int)(10.0) 是不是整数常量？ ——常量表达式</p>
+<p>(int)(+10.0) 是不是整数常量？ ——变长数组 (VLA) 的维度表达式</p>
+<p>给定const int b&#x3D;10; b 是不是整数常量？——不是</p>
+<p>什么是整数常量？整数类型且值不会变的量? ——“编译器在编译阶段就能算出来的整型值”from ChatGPT</p>
+</blockquote>
+<p>答案：只有10是整数常量，其他都是常量表达式</p>
+<p><strong>整数常量</strong>和<strong>整数常量表达式</strong>都是可以在编译期间计算得出的</p>
+<h3 id="3-编译期计算的sizeof-函数"><a href="#3-编译期计算的sizeof-函数" class="headerlink" title="3.编译期计算的sizeof()函数"></a>3.编译期计算的sizeof()函数</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> i = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">sizeof</span>(i++);</span><br><span class="line"><span class="built_in">printf</span>(“i = %d\n”, i);</span><br></pre></td></tr></table></figure>
+
+<p>现在i等于几？</p>
+<p>答案：0，sizeof()函数在<strong>编译时</strong>就会计算结果，它不会执行操作数中的表达式<code>i++</code>，只会分析操作数的类型</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> x[<span class="number">5</span>][(<span class="type">int</span>)(<span class="number">10.0</span>)];</span><br><span class="line"><span class="type">int</span> y[<span class="number">5</span>][(<span class="type">int</span>)(+<span class="number">10.0</span>)];</span><br><span class="line"><span class="type">int</span> i=<span class="number">0</span>;</span><br><span class="line"><span class="type">int</span> j=<span class="number">0</span>;</span><br><span class="line"><span class="keyword">sizeof</span>(x[i++]); </span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;%d\n&quot;</span>, i);</span><br><span class="line"><span class="keyword">sizeof</span>(y[j++]);</span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;%d\n&quot;</span>, j);</span><br></pre></td></tr></table></figure>
+
+<p>现在i等于几？j等于几？</p>
+<p>答案：i&#x3D;0，j&#x3D;1，(int)(10.0) 是整数常量表达式故而在<strong>编译期间</strong>可以确定第二维的大小，而(int)(+10.0)内部(+10.0)是浮点常量表达式，无法在<strong>编译期间</strong>确定第二维大小，所以需要再<strong>运行期间</strong>进行j++运算，导致j加一</p>
+<hr>
+<h2 id="二-C语言的一般化设计思想"><a href="#二-C语言的一般化设计思想" class="headerlink" title="二.C语言的一般化设计思想"></a>二.C语言的一般化设计思想</h2><h3 id="1-一些C标准"><a href="#1-一些C标准" class="headerlink" title="1.一些C标准"></a>1.一些C标准</h3><p>对于第一部分的问题1，实际上的C标准中将a、b、c、d、e、f统称为<strong>对象标识符</strong>，其处理逻辑规则一致</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">foo</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">int</span> a[<span class="number">10</span>];</span><br><span class="line">	<span class="number">0</span>[a]=<span class="number">1</span>;	<span class="comment">//合法</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>为什么<code>0[a]=1</code>合法？</p>
+<p>这里的<code>0[a]=1</code>是所谓的“语法糖”，因为数组访问本质上是一个加法：要访问a[i]，其实是”先计算指针<code>a</code>加上偏移量<code>i</code>，再解引用”，因此等价于*(a + i)，而C语言加法是commutative(可交换的)，故而又等价于*(i + a)，最后写成了i[a]，<strong>但是这种写法并不符合代码阅读习惯，反而会降低代码的可读性</strong></p>
+<ul>
+<li>语法糖：某种语法的其他写法，这种写法对功能并没有影响，但是更方便程序员使用。通常来说使用语法糖能够<strong>增加程序的可读性，减少代码出错的机率</strong></li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc,<span class="type">char</span>* argv[])</span></span><br><span class="line">&#123;</span><br><span class="line">	foo();	<span class="comment">//合法</span></span><br><span class="line">	(&amp;foo)();	<span class="comment">//合法</span></span><br><span class="line">	(*foo)();	<span class="comment">//合法</span></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>为什么<code>foo()</code>、<code>(&amp;foo)()</code>和<code>(*foo)()</code>都合法？</p>
+<p>C语言对函数名的特殊处理规则：<strong>函数名在表达式中会隐式转换为函数指针</strong></p>
+<p>根据上述特殊处理规则，我们可以对每条代码进行解读：</p>
+<ul>
+<li><code>foo()</code>经隐式转换后变为<code>(&amp;foo)()</code>，然后通过函数指针访问函数</li>
+<li><code>(&amp;foo)()</code>是显式获取函数<code>foo</code>的地址，无需多言</li>
+<li><code>(*foo)()</code>中，<code>foo</code>会先根据规则转换为<code>&amp;foo</code>，由此原代码变为<code>(*(&amp;foo))()</code>，而我们知道<code>*</code>和<code>&amp;</code>操作互反，最终变为<code>foo()</code>，后续同第一条</li>
+</ul>
+<h3 id="2-学习资料与标准体系之间的差异"><a href="#2-学习资料与标准体系之间的差异" class="headerlink" title="2.学习资料与标准体系之间的差异"></a>2.学习资料与标准体系之间的差异</h3><ul>
+<li><p><strong>核心概念介绍缺失</strong>：<strong>对象</strong>、<strong>lvalue(左值)</strong>、**rvalue(右值)**等核心概念介绍不详细或者不涉及</p>
+<ul>
+<li>C语言中存在“<strong>对象</strong>“这一概念</li>
+<li>lvalue(左值)：<strong>可寻址</strong>的对象</li>
+<li>rvalue(右值)：没有持久的存储地址，或不能被取地址的<strong>临时值</strong></li>
+</ul>
+</li>
+<li><p><strong>部分概念混淆有误</strong>：<strong>变量、常量</strong>的划分方法，<strong>常量和常量表达式</strong>的混淆等</p>
+</li>
+<li><p><strong>存在许多自创概念</strong>：常变量、只读变量、行指针、列指针、数组指针、指针数组、多级指针、模拟引用传递……</p>
+</li>
+</ul>
+<hr>
+<h2 id="三-地址"><a href="#三-地址" class="headerlink" title="三.地址"></a>三.地址</h2><ul>
+<li><p>地址是<strong>字节</strong>在内存中的编号，只有字节才有地址，我们一般谈论地址的时候指的都是字节的逻辑地址</p>
+</li>
+<li><p>1个byte不一定等于8个bit，&lt;limits.h&gt;中定义了一个宏<code>CHAR_BIT</code>，C语言中规定一个byte等于<code>CHAR_BIT</code>个bit，C语言标准规定<code>CHAR_BIT</code>&gt;&#x3D;8，即<strong>一个Byte包含至少8个bit</strong></p>
+</li>
+<li><p>我们所说的8&#x2F;16&#x2F;32&#x2F;64(n)位机，是指用n位bit来表示byte的编号</p>
+</li>
+</ul>
+<hr>
+<h2 id="四-对象"><a href="#四-对象" class="headerlink" title="四.对象"></a>四.对象</h2><h3 id="1-定义"><a href="#1-定义" class="headerlink" title="1.定义"></a>1.定义</h3><p>在标准文档中有这样两句话：</p>
+<blockquote>
+<p>region of data storage, the contents of which can represent values</p>
+<p>一段数据存储区域，其内容能够表示数值</p>
+<p>objects are composed of contiguous sequences of one or more bytes</p>
+<p>对象由一个或多个字节组成的连续序列构成</p>
+</blockquote>
+<p>说白了，C语言中的<strong>对象</strong>就是<strong>能表示有意义的值</strong>一段<strong>连续的内存区域</strong></p>
+<h3 id="2-对象类型"><a href="#2-对象类型" class="headerlink" title="2.对象类型"></a>2.对象类型</h3><p>简单说，<strong>对象类型就是 “给对象贴的标签”</strong>，告诉编译器：这块连续内存(对象)应该如何被理解、如何被操作</p>
+<ul>
+<li><strong>完全对象类型</strong> [Object Type] 对象的大小(size)、内存布局(layout)和对齐方式(alignment requirement)都很清楚的对象</li>
+<li><strong>不完全对象类型</strong> [incomplete Type] 与完全对象类型相反，包括对象信息不完整的对象类型和空类型(void)</li>
+</ul>
+<h3 id="3-对象值-Object-Value-与对象表示-Object-Representation"><a href="#3-对象值-Object-Value-与对象表示-Object-Representation" class="headerlink" title="3.对象值[Object Value]与对象表示[Object Representation]"></a>3.对象值[Object Value]与对象表示[Object Representation]</h3><ul>
+<li>对象表示：指对象在内存中<strong>实际存储的二进制字节序列</strong>，是对象的 “物理形态”</li>
+<li>对象值：从对象表示中<strong>解读出的、有逻辑意义的数据</strong>，是对象的 “逻辑含义”</li>
+</ul>
+<p>上述两者通过<strong>对象类型</strong>相互映射</p>
+<p>假设有两个对象，他们的对象类型一样：</p>
+<ul>
+<li>若对象表示一样，则对象的值<strong>一定</strong>一样</li>
+<li>若对象的值一样，则对象表示<strong>不一定</strong>一样</li>
+</ul>
+<p>原因：组成对象表示的bit中包括Value Bits(有效)和Padding Bits(填充)，而一个对象表示可以有若干无意义的Padding Bits，当然Value Bits和Padding Bits的构成也是由<strong>对象类型</strong>决定的</p>
+<h3 id="4-对象的size"><a href="#4-对象的size" class="headerlink" title="4.对象的size"></a>4.对象的size</h3><p>对于任何一个对象来说，假设它包含的byte个数是<em>n</em>(n*≥1)</p>
+<ul>
+<li><strong><em>n</em>是这个对象的size</strong>，这个对象包含的bit数量就是<em>n</em>×CHAR_BIT个</li>
+</ul>
+<h3 id="5-对象的地址和对齐要求"><a href="#5-对象的地址和对齐要求" class="headerlink" title="5.对象的地址和对齐要求"></a>5.对象的地址和对齐要求</h3><ul>
+<li>对象的地址[address] 对象所占用的连续字节中最低位字节的编号</li>
+<li>对齐要求 [alignment] 要求对象的地址能被对齐要求<strong>整除</strong></li>
+</ul>
+<p>对于一个对象类型T，我们可以使用<code>sizeof(T)</code>获取类型<strong>大小</strong>(如果是不完全对象类型，就没有size)以及使用<code>alignof(T)</code>获取<strong>缺省对齐要求</strong>(对象的对齐要求可变)</p>
+<ul>
+<li>缺省：在特定情况下，某个设置或参数未被明确指定时所使用的默认值</li>
+</ul>
+<p>类型本身没有大小和对齐要求，只有对象才有大小和对齐要求</p>
+<hr>
+<h2 id="五-类型"><a href="#五-类型" class="headerlink" title="五.类型"></a>五.类型</h2><p>类型包括算数类型(Arithmetic Type)、派生类型(Derived Type)、限定类型(Qualified Type)</p>
+<h3 id="1-算数类型"><a href="#1-算数类型" class="headerlink" title="1.算数类型"></a>1.算数类型</h3><p><img src="/images/C_SYS_1/1.png"></p>
+<p>还有一种分类Basic Type，包括char、Unsigned Integer Type、Signed Integer、Floating Type</p>
+<ul>
+<li><p>char、signed char、unsigned char是三种不同的类型，编译器会指定char和signed char、unsigned char其中之一行为一致</p>
+</li>
+<li><p>对于一个标准有符号整数类型来说，所有的bits分为三个部分：1个sign bit，n个value bits，m个padding bits，这时候这个对象类型的<strong>宽度</strong>为n+1，<strong>精度</strong>为n，对象值的范围是-(2^(n-1)到2^(n-1)-1</p>
+</li>
+<li><p>signed char的宽度<strong>一定</strong>等于CHAR_BIT，且signed char<strong>不允许</strong>有padding bits</p>
+</li>
+<li><p>对于无符号整数类型(每种有符号整数类型对应一种无符号证书类型+bool类型)来说，所有的bits分为两个部分：n个value bits，m个padding bits，这时候这个对象类型的<strong>宽度</strong>为n，<strong>精度</strong>也为n，对象值的范围是0到2^n-1</p>
+</li>
+<li><p>unsigned char的宽度刚好等于CHAR_BIT</p>
+</li>
+<li><p>bool类型的宽度刚好为1(只需要1为表示true和false)，bool类型的size由编译器决定，且bool类型<strong>一定</strong>有padding bits，padding bits &#x3D; sizeof(bool) * CHAR_BIT - 1</p>
+</li>
+<li><p>对象的对齐要求一定是2^n</p>
+</li>
+<li><p>signed char&#x2F;unsigned char类型的对齐要求是<strong>weakest</strong>，但<strong>不一定</strong>是1</p>
+</li>
+<li><p>枚举类型enum Season是由程序员定义出来的</p>
+<ul>
+<li>在枚举类型定义的时候<strong>可以指定</strong>实现类型</li>
+<li>如果不指定实现类型，实现类型由编译器<strong>自行设置</strong>为以下5种整数类型之一：char、标准有符号整数类型、标准无符号整数类型、扩展有符号整数类型、以及扩展无符号整数类型</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-派生类型"><a href="#2-派生类型" class="headerlink" title="2.派生类型"></a>2.派生类型</h3><p><img src="/images/C_SYS_1/2.png"></p>
+<h4 id="一-数组类型"><a href="#一-数组类型" class="headerlink" title="(一)数组类型"></a>(一)数组类型</h4><p>数组类型的形式化定义：T[N]</p>
+<ul>
+<li>T：元素类型[Element Type]，必须是一个完全对象类型</li>
+<li>N：元素类型的个数[Number of Elements]，N是一个表达式<ul>
+<li>若没有N，则T[]也是一个数组类型，且该数组类型是一个<strong>不完全对象类型</strong></li>
+<li>若有N，如果N是一个<strong>整数常量</strong>或<strong>整数常量表达式</strong>，T[N]是普通数组类型</li>
+<li>否则，则T[N]是<strong>变长数组类型</strong>(Variable Length Array Type)</li>
+</ul>
+</li>
+</ul>
+<p>T[N]被视作一个从T类型派生的类型，因此数组类型也有大小和对齐要求：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">sizeof</span>(T[N])：N×<span class="keyword">sizeof</span>(T)	<span class="comment">//T[]是不完全对象，没有size</span></span><br><span class="line">alingof(T[N])：<span class="keyword">alignof</span>(T)	<span class="comment">//T[]是不完全对象，没有alignment</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>整体性问题：</p>
+<p>我们可以利用typedef为类型T设置别名，例如：</p>
+  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> T Alias;</span><br></pre></td></tr></table></figure>
+
+<p>  作为类型T的派生类型，也可以用typedef为T[N]设置别名：</p>
+  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="type">int</span>[<span class="number">5</span>] AINT;	<span class="comment">//×</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="type">int</span> AINT[<span class="number">5</span>];	<span class="comment">//√</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="title function_">typeof</span><span class="params">(<span class="type">int</span>[<span class="number">5</span>])</span> AINT;	<span class="comment">//√</span></span><br></pre></td></tr></table></figure>
+
+<p>问题在于T[N]在语法上并不是一个整体，而AINT是一个整体，因此第一种将非整体类型命名为一个整体显然不符合逻辑</p>
+</li>
+<li><p>继续派生：</p>
+<p>我们可以将T[N]视作一个整体，那么T**[M]**[N]就是T[N]的一个派生类型(当然依然必须满足T是一个完全对象类型)，所以完全对象数组类型也能继续派生</p>
+<p>按照上述的别名设置，我们可以继续举例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span>[<span class="number">10</span>][<span class="number">5</span>] 等价于 AINT[<span class="number">10</span>]</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>由上述描述，我们可以总结：C语言里面所有数组都是“<strong>一维</strong>”的，只不过元素变成了数组</p>
+</li>
+</ul>
+<p>举例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span>[<span class="number">10</span>][]中的元素类型是<span class="type">int</span>[]	<span class="comment">//× 这里的元素是int[]，不满足完全对象类型</span></span><br><span class="line"><span class="type">int</span>[][<span class="number">10</span>]中的元素类型是<span class="type">int</span>[<span class="number">10</span>]	<span class="comment">//√ 成立，但本身不是完全对象类型，故而不能继续派生数组类型了</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="二-指针类型"><a href="#二-指针类型" class="headerlink" title="(二)指针类型"></a>(二)指针类型</h4><p>指针类型的形式化定义：T*</p>
+<ul>
+<li>T [Referenced Type]，完全对象类型or不完全对象类型or函数类型</li>
+<li>*：合适位置摆放的*标志这是一个指针类型</li>
+</ul>
+<p>数组的指针：T[N]的指针表示为<strong>T(*)[N]</strong></p>
+<p>任何指针类型都是完全对象类型，因此可以进行派生：</p>
+<ul>
+<li><p>指针类型也能用于构造数组类型</p>
+</li>
+<li><p>指针类型也有自己对应的指针类型</p>
+</li>
+<li><p>派生规则如下：</p>
+<p><img src="/images/C_SYS_1/3.png"></p>
+</li>
+</ul>
+<h4 id="三-复杂类型派生示例"><a href="#三-复杂类型派生示例" class="headerlink" title="(三)复杂类型派生示例"></a>(三)复杂类型派生示例</h4><p><img src="/images/C_SYS_1/4.png"></p>
+<h3 id="3-限定类型"><a href="#3-限定类型" class="headerlink" title="3.限定类型"></a>3.限定类型</h3><h4 id="一-Atomic"><a href="#一-Atomic" class="headerlink" title="(一)_Atomic"></a>(一)_Atomic</h4><p>给定一个类型T，其原子限定类型是_Atomic(T) </p>
+<ul>
+<li><p>_Atomic(T)是一个合法的新类型，_Atomic(T)和T是两种<strong>不同</strong>的类型</p>
+</li>
+<li><p>他们的<strong>大小</strong>、<strong>对齐要求</strong>以及<strong>相同对象值对应的对象表示</strong>_不一定_一样</p>
+</li>
+<li><p>该类型对象的大小和缺省对齐要求为：<strong>sizeof(_Atomic(T))<strong>和</strong>alignof(_Atomic(T))</strong></p>
+</li>
+<li><p>原子类型也是一种<strong>派生类型</strong></p>
+</li>
+</ul>
+<h4 id="二-const、volatile、restrict"><a href="#二-const、volatile、restrict" class="headerlink" title="(二)const、volatile、restrict"></a>(二)const、volatile、restrict</h4><p>给定一个类型T，给定三个限定符之一的Q，其限定类型为<strong>Q T</strong>或<strong>T Q</strong></p>
+<ul>
+<li><p><strong>T</strong>和<strong>Q T(或T Q)<strong>是两种不同的Type，但</strong>大小，表示值，对齐方式一样</strong></p>
+</li>
+<li><p>restrict<strong>只能</strong>限定对象指针类型，或者对象指针类型构成的多维数组类型</p>
+</li>
+<li><p>对于不同类型的T：</p>
+<ul>
+<li>当T是<strong>一个整体</strong>的时候，限定符在T的左边右边都<strong>一样</strong></li>
+<li>当T[N]是<strong>数组类型</strong>的时候，<strong>Q T[N]</strong>：数组类型，元素类型为<strong>Q T</strong>，元素个数<strong>N</strong>；T[N] Q：不合法</li>
+<li>当T*是<strong>数组类型</strong>的时候，<strong>Q T*</strong>：指针类型，Referenced Type是<strong>Q T</strong>；<strong>T* Q</strong>：Q限定T*类型</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-为不同类型T设置别名"><a href="#4-为不同类型T设置别名" class="headerlink" title="4.为不同类型T设置别名"></a>4.为不同类型T设置别名</h3><ul>
+<li>语法上的整体：typedef T Alias</li>
+<li>数组类型：typedef T Alias[N]&#x2F;T Alias [N]</li>
+<li>指针类型：typedef T* Alias&#x2F;T *Alias&#x2F;T*Alias&#x2F;T * Alais</li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://Boomfreezing.github.io">Boom_freezing</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://boomfreezing.github.io/2025/09/15/C%E8%AF%AD%E8%A8%80%E7%B3%BB%E7%BB%9F%E7%BA%A7%E7%BC%96%E7%A8%8B-%E4%B8%80/">http://boomfreezing.github.io/2025/09/15/C%E8%AF%AD%E8%A8%80%E7%B3%BB%E7%BB%9F%E7%BA%A7%E7%BC%96%E7%A8%8B-%E4%B8%80/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://Boomfreezing.github.io" target="_blank">Boomfreezing</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/C%E8%AF%AD%E8%A8%80/">C语言</a><a class="post-meta__tags" href="/tags/%E5%AF%B9%E8%B1%A1/">对象</a><a class="post-meta__tags" href="/tags/%E7%B1%BB%E5%9E%8B/">类型</a><a class="post-meta__tags" href="/tags/%E6%95%B0%E7%BB%84/">数组</a><a class="post-meta__tags" href="/tags/%E6%8C%87%E9%92%88/">指针</a></div><div class="post-share"><div class="social-share" data-image="/images/C_SYS_1/cover.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2025/06/16/OO-Unit4/" title="OO_Unit4"><img class="cover" src="/images/OO_Unit4/cover3.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">OO_Unit4</div></div><div class="info-2"><div class="info-item-1">“搭建一个简单的图书管理系统”——正向建模与大模型辅助设计相关知识梳理……</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/head.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Boom_freezing</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">17</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Boomfreezing"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">Welcome to Boom_freezing's Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#C%E8%AF%AD%E8%A8%80%E7%B3%BB%E7%BB%9F%E7%BA%A7%E8%AF%BE%E7%A8%8B-%E4%B8%80"><span class="toc-number">1.</span> <span class="toc-text">C语言系统级课程(一)</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80-%E4%BB%8E%E5%87%A0%E4%B8%AA%E9%97%AE%E9%A2%98%E5%BC%95%E5%85%A5"><span class="toc-number">1.1.</span> <span class="toc-text">一.从几个问题引入</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%8F%98%E9%87%8F"><span class="toc-number">1.1.1.</span> <span class="toc-text">1.变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E6%95%B4%E6%95%B0%E5%B8%B8%E9%87%8F"><span class="toc-number">1.1.2.</span> <span class="toc-text">2.整数常量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E7%BC%96%E8%AF%91%E6%9C%9F%E8%AE%A1%E7%AE%97%E7%9A%84sizeof-%E5%87%BD%E6%95%B0"><span class="toc-number">1.1.3.</span> <span class="toc-text">3.编译期计算的sizeof()函数</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C-C%E8%AF%AD%E8%A8%80%E7%9A%84%E4%B8%80%E8%88%AC%E5%8C%96%E8%AE%BE%E8%AE%A1%E6%80%9D%E6%83%B3"><span class="toc-number">1.2.</span> <span class="toc-text">二.C语言的一般化设计思想</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E4%B8%80%E4%BA%9BC%E6%A0%87%E5%87%86"><span class="toc-number">1.2.1.</span> <span class="toc-text">1.一些C标准</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%AD%A6%E4%B9%A0%E8%B5%84%E6%96%99%E4%B8%8E%E6%A0%87%E5%87%86%E4%BD%93%E7%B3%BB%E4%B9%8B%E9%97%B4%E7%9A%84%E5%B7%AE%E5%BC%82"><span class="toc-number">1.2.2.</span> <span class="toc-text">2.学习资料与标准体系之间的差异</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89-%E5%9C%B0%E5%9D%80"><span class="toc-number">1.3.</span> <span class="toc-text">三.地址</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B-%E5%AF%B9%E8%B1%A1"><span class="toc-number">1.4.</span> <span class="toc-text">四.对象</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%AE%9A%E4%B9%89"><span class="toc-number">1.4.1.</span> <span class="toc-text">1.定义</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%AF%B9%E8%B1%A1%E7%B1%BB%E5%9E%8B"><span class="toc-number">1.4.2.</span> <span class="toc-text">2.对象类型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%AF%B9%E8%B1%A1%E5%80%BC-Object-Value-%E4%B8%8E%E5%AF%B9%E8%B1%A1%E8%A1%A8%E7%A4%BA-Object-Representation"><span class="toc-number">1.4.3.</span> <span class="toc-text">3.对象值[Object Value]与对象表示[Object Representation]</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%AF%B9%E8%B1%A1%E7%9A%84size"><span class="toc-number">1.4.4.</span> <span class="toc-text">4.对象的size</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%9C%B0%E5%9D%80%E5%92%8C%E5%AF%B9%E9%BD%90%E8%A6%81%E6%B1%82"><span class="toc-number">1.4.5.</span> <span class="toc-text">5.对象的地址和对齐要求</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94-%E7%B1%BB%E5%9E%8B"><span class="toc-number">1.5.</span> <span class="toc-text">五.类型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E7%AE%97%E6%95%B0%E7%B1%BB%E5%9E%8B"><span class="toc-number">1.5.1.</span> <span class="toc-text">1.算数类型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E6%B4%BE%E7%94%9F%E7%B1%BB%E5%9E%8B"><span class="toc-number">1.5.2.</span> <span class="toc-text">2.派生类型</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%80-%E6%95%B0%E7%BB%84%E7%B1%BB%E5%9E%8B"><span class="toc-number">1.5.2.1.</span> <span class="toc-text">(一)数组类型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BA%8C-%E6%8C%87%E9%92%88%E7%B1%BB%E5%9E%8B"><span class="toc-number">1.5.2.2.</span> <span class="toc-text">(二)指针类型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%89-%E5%A4%8D%E6%9D%82%E7%B1%BB%E5%9E%8B%E6%B4%BE%E7%94%9F%E7%A4%BA%E4%BE%8B"><span class="toc-number">1.5.2.3.</span> <span class="toc-text">(三)复杂类型派生示例</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E9%99%90%E5%AE%9A%E7%B1%BB%E5%9E%8B"><span class="toc-number">1.5.3.</span> <span class="toc-text">3.限定类型</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%80-Atomic"><span class="toc-number">1.5.3.1.</span> <span class="toc-text">(一)_Atomic</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BA%8C-const%E3%80%81volatile%E3%80%81restrict"><span class="toc-number">1.5.3.2.</span> <span class="toc-text">(二)const、volatile、restrict</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E4%B8%BA%E4%B8%8D%E5%90%8C%E7%B1%BB%E5%9E%8BT%E8%AE%BE%E7%BD%AE%E5%88%AB%E5%90%8D"><span class="toc-number">1.5.4.</span> <span class="toc-text">4.为不同类型T设置别名</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2025/09/15/C%E8%AF%AD%E8%A8%80%E7%B3%BB%E7%BB%9F%E7%BA%A7%E7%BC%96%E7%A8%8B-%E4%B8%80/" title="C语言系统级编程(一)"><img src="/images/C_SYS_1/cover.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="C语言系统级编程(一)"/></a><div class="content"><a class="title" href="/2025/09/15/C%E8%AF%AD%E8%A8%80%E7%B3%BB%E7%BB%9F%E7%BA%A7%E7%BC%96%E7%A8%8B-%E4%B8%80/" title="C语言系统级编程(一)">C语言系统级编程(一)</a><time datetime="2025-09-14T16:04:25.000Z" title="发表于 2025-09-15 00:04:25">2025-09-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/06/16/OO-Unit4/" title="OO_Unit4"><img src="/images/OO_Unit4/cover3.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="OO_Unit4"/></a><div class="content"><a class="title" href="/2025/06/16/OO-Unit4/" title="OO_Unit4">OO_Unit4</a><time datetime="2025-06-16T03:56:15.000Z" title="发表于 2025-06-16 11:56:15">2025-06-16</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/05/20/OO-Unit3/" title="OO_Unit3"><img src="/images/OO_Unit3/cover12.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="OO_Unit3"/></a><div class="content"><a class="title" href="/2025/05/20/OO-Unit3/" title="OO_Unit3">OO_Unit3</a><time datetime="2025-05-20T03:36:56.000Z" title="发表于 2025-05-20 11:36:56">2025-05-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/04/17/OO-Unit2/" title="OO-Unit2"><img src="/images/OO_Unit2/cover1.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="OO-Unit2"/></a><div class="content"><a class="title" href="/2025/04/17/OO-Unit2/" title="OO-Unit2">OO-Unit2</a><time datetime="2025-04-17T09:37:47.000Z" title="发表于 2025-04-17 17:37:47">2025-04-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/03/31/OO-Unit1/" title="OO_Unit1"><img src="/images/OO_Unit1/cover2.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="OO_Unit1"/></a><div class="content"><a class="title" href="/2025/03/31/OO-Unit1/" title="OO_Unit1">OO_Unit1</a><time datetime="2025-03-31T02:08:15.000Z" title="发表于 2025-03-31 10:08:15">2025-03-31</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/header.png);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2025 By Boom_freezing</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><div class="aplayer no-destroy" data-id="9125417643" data-server="netease" data-type="playlist" data-fixed="true" data-mini="true" data-listFolded="false" data-order="random" data-preload="none" data-autoplay="false" muted></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/metingjs/dist/Meting.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
