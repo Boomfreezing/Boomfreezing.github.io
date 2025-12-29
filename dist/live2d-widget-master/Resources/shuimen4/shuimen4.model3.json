@@ -1,0 +1,1 @@
+{"Version":3,"FileReferences":{"Moc":"shuimen4.moc3","Textures":["shuimen4.4096/texture_00.png"],"Physics":"shuimen4.physics3.json","DisplayInfo":"shuimen4.cdi3.json"},"Groups":[{"Target":"Parameter","Name":"EyeBlink","Ids":[]},{"Target":"Parameter","Name":"LipSync","Ids":[]}]}
