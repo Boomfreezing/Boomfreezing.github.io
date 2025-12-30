@@ -488,12 +488,222 @@
     window.__waifu_wrap_listeners = true;
   }catch(e){}
 })();
-</script><!-- Load the bundled widget as an ES module (waifu-tips.js)--><script type="module" src="/dist/live2d-widget-master/dist/waifu-tips.js"></script><!-- Initialization is performed early in head.pug; here we keep a small PJAX re-init hook--><script>(function(){
+</script><!-- Immediate toggle handler: when user clicks toggle and #waifu is missing/hidden,--><!-- force an immediate initWidget(cfg) (with short wait retries) so the waifu appears right away.--><script>(function(){
+  try{
+    var cfgImmediate = {
+      waifuPath: '/dist/live2d-widget-master/dist/waifu-tips.json',
+      modelId: 0,
+      modelTexturesId: 0,
+      cubism2Path: '/dist/live2d-widget-master/dist/live2d.min.js',
+      cubism5Path: 'https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js',
+      tools: ['hitokoto','asteroids','switch-model','switch-texture','photo','info','quit'],
+      logLevel: 'info',
+      drag: false
+    };
+
+    function callInit(){
+      try{ localStorage.removeItem('modelId'); localStorage.removeItem('modelTexturesId'); }catch(e){}
+      if(typeof initWidget === 'function'){
+        try{ initWidget(cfgImmediate); console.info('[waifu] immediate initWidget called'); return true;}catch(e){console.warn('[waifu] immediate initWidget threw', e);}
+      }
+      return false;
+    }
+
+    function createBlocker(){
+      if(document.getElementById('waifu-blocker')) return;
+      var b = document.createElement('div'); b.id='waifu-blocker';
+      b.style.position='fixed'; b.style.left='0'; b.style.top='0'; b.style.right='0'; b.style.bottom='0';
+      b.style.zIndex = '2147483646'; b.style.background='transparent'; b.style.pointerEvents='auto';
+      document.body.appendChild(b); console.info('[waifu] blocker inserted');
+    }
+    function removeBlocker(){
+      var b = document.getElementById('waifu-blocker'); if(b) try{ b.remove(); console.info('[waifu] blocker removed'); }catch(e){}
+    }
+    function showWaifuNow(){
+      try{
+        var w = document.getElementById('waifu');
+        if(!w) return;
+        // remove inline positioning set by drag, let CSS handle placement
+        try{ w.style.top = ''; w.style.left = ''; }catch(e){}
+        w.classList.remove('waifu-hidden');
+        w.classList.add('waifu-active');
+        // clear inline bottom/transform so CSS transitions apply cleanly
+        try{ w.style.bottom = ''; w.style.transform = ''; }catch(e){}
+        // ensure canvas visible
+        var c = document.getElementById('live2d') || document.querySelector('#waifu canvas');
+        if(c) try{ c.style.display = ''; }catch(e){}
+        console.info('[waifu] showWaifuNow applied (position reset)');
+      }catch(e){console.warn('[waifu] showWaifuNow failed', e);}        
+    }
+
+    // Observe class changes on #waifu: when hidden, destroy resources to avoid flashes;
+    // when active, ensure positioning and canvas visibility are correct.
+    (function(){
+      try{
+        var installObserver = function(node){
+          try{
+            var mo = new MutationObserver(function(muts){
+              muts.forEach(function(m){
+                if(m.attributeName === 'class'){
+                  var t = m.target;
+                  if(t.classList && t.classList.contains('waifu-hidden')){
+                    // after hidden, clean up to avoid stale instance causing flashes
+                    setTimeout(function(){
+                      try{ if(window.__waifu_destroy) window.__waifu_destroy(); }catch(e){}
+                      try{ if(t.parentNode) t.parentNode.removeChild(t); console.info('[waifu] removed waifu after hide'); }catch(e){}
+                    }, 300);
+                  } else if(t.classList && t.classList.contains('waifu-active')){
+                    try{ t.style.top=''; t.style.left=''; t.style.bottom=''; t.style.transform=''; var cc = document.getElementById('live2d')||t.querySelector('canvas'); if(cc) cc.style.display=''; console.info('[waifu] class observer adjusted position'); }catch(e){}
+                  }
+                }
+              });
+            });
+            mo.observe(node, { attributes: true, attributeFilter: ['class'] });
+          }catch(e){console.warn('[waifu] installObserver inner failed', e);}            
+        };
+        var wnode = document.getElementById('waifu');
+        if(wnode) installObserver(wnode); else {
+          var mo2 = new MutationObserver(function(muts){
+            for(var m of muts){
+              for(var n of m.addedNodes){
+                if(n && n.id === 'waifu'){ installObserver(n); mo2.disconnect(); return; }
+              }
+            }
+          });
+          mo2.observe(document.body, { childList: true, subtree: true });
+        }
+      }catch(e){console.warn('[waifu] class observer install failed', e);}        
+    })();
+
+    document.addEventListener('click', function(evt){
+      var btn = evt.target && evt.target.closest ? evt.target.closest('#waifu-toggle') : null;
+      if(!btn) return;
+      var existing = document.getElementById('waifu');
+      if(!existing || (existing.classList && existing.classList.contains('waifu-hidden'))){
+        createBlocker();
+        // If an old hidden instance exists, force a full reload of the widget scripts
+        // This avoids stale cubism instances that cause partial rendering
+        (async function(){
+          try{
+            // remove old waifu DOM
+            if(existing && existing.parentNode) try{ existing.parentNode.removeChild(existing); }catch(e){}
+            // remove existing widget scripts
+            var scripts = Array.from(document.querySelectorAll('script'));
+            scripts.forEach(function(s){
+              try{
+                var src = s.getAttribute && s.getAttribute('src') || '';
+                if(src && (src.indexOf('/dist/live2d-widget-master/dist/waifu-tips.js')!==-1 || src.indexOf('/dist/live2d-widget-master/dist/live2d.min.js')!==-1)){
+                  s.parentNode.removeChild(s);
+                }
+              }catch(e){}
+            });
+            // reload runtime then module, and init when ready
+            var runtimeSrc = '/dist/live2d-widget-master/dist/live2d.min.js';
+            var moduleSrc = '/dist/live2d-widget-master/dist/waifu-tips.js';
+            // add runtime
+            await new Promise(function(resolve){
+              var sr = document.createElement('script'); sr.src = runtimeSrc; sr.onload = resolve; sr.onerror = resolve; document.head.appendChild(sr);
+            });
+            // add module and wait
+            await new Promise(function(resolve){
+              var sm = document.createElement('script'); sm.type='module'; sm.src = moduleSrc; sm.onload = resolve; sm.onerror = resolve; document.head.appendChild(sm);
+            });
+            // now try init
+            try{ localStorage.removeItem('modelId'); localStorage.removeItem('modelTexturesId'); }catch(e){}
+            if(typeof initWidget === 'function'){
+              try{ initWidget({ waifuPath: '/dist/live2d-widget-master/dist/waifu-tips.json', modelId:0, modelTexturesId:0, cubism2Path: '/dist/live2d-widget-master/dist/live2d.min.js', cubism5Path: 'https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js', tools: ['hitokoto','asteroids','switch-model','switch-texture','photo','info','quit'], logLevel: 'info', drag: false });
+                console.info('[waifu] reloaded scripts and called initWidget');
+                setTimeout(showWaifuNow, 200);
+              }catch(e){ console.warn('[waifu] initWidget after reload threw', e); }
+            } else {
+              console.warn('[waifu] initWidget not available after reloading scripts');
+            }
+          }catch(e){ console.warn('[waifu] reload scripts failed', e); }
+          removeBlocker();
+        })();
+        return;
+      }
+    }, true);
+  }catch(e){console.warn('[waifu] immediate toggle hook failed', e);}    
+})();
+</script><!-- Load the bundled widget as an ES module (waifu-tips.js)--><script type="module" src="/dist/live2d-widget-master/dist/waifu-tips.js"></script><!-- Wrapper: make initWidget idempotent if a #waifu element already exists--><script>(function(){
+  try{
+    function wrap(){
+      if(window.__waifu_init_wrapped) return;
+      if(typeof window.initWidget !== 'function') return;
+      var orig = window.initWidget;
+      window.__waifu_init_wrapped = true;
+      window.__waifu_init_orig = orig;
+      window.initWidget = function(cfg){
+        try{
+          var existing = document.getElementById('waifu');
+          if(existing){
+            try{ existing.classList.remove('waifu-hidden'); existing.classList.add('waifu-active'); }catch(e){}
+            return;
+          }
+        }catch(e){}
+        return orig(cfg);
+      };
+      console.info('[waifu] initWidget wrapped to be idempotent');
+    }
+    // attempt to wrap immediately, or when module defines it
+    if(typeof window.initWidget === 'function') wrap(); else {
+      var tries=0, max=50; var t=setInterval(function(){ tries++; if(typeof window.initWidget==='function'){ clearInterval(t); wrap(); } else if(tries>=max){ clearInterval(t); console.warn('[waifu] initWidget wrapper failed (not found)'); } }, 100);
+    }
+  }catch(e){console.warn('[waifu] initWidget wrapper error', e);}    
+})();
+</script><!-- Initialization is performed early in head.pug; here we keep a small PJAX re-init hook--><script>(function(){
   function reinit(){
     if(typeof initWidget === 'function'){
       try{ initWidget(); console.info('[waifu] reinit called'); }catch(e){ console.warn('[waifu] reinit failed', e); }
     }
   }
+  // when reinit runs, try to show waifu shortly after
+  function reinitShow(){ try{ setTimeout(function(){ if(typeof window.showWaifuNow==='function') window.showWaifuNow(); else if(typeof showWaifuNow==='function') showWaifuNow(); }, 300); }catch(e){}
   try{ document.addEventListener('pjax:complete', reinit); document.addEventListener('pjax:end', reinit); }catch(e){}
+})();
+</script><!-- Defensive handler: create temporary stubs to avoid null DOM refs during recreate,--><!-- then remove old hidden #waifu after a short delay; clean stub when new #waifu appears.--><script>(function(){
+  try{
+    function ensureStub(){
+      if(document.getElementById('waifu-stub')) return;
+      var stub = document.createElement('div'); stub.id = 'waifu-stub'; stub.style.display='none';
+      var tips = document.createElement('div'); tips.id = 'waifu-stub-tips';
+      var canvasWrap = document.createElement('div'); canvasWrap.id = 'waifu-stub-canvas';
+      var c = document.createElement('canvas'); c.id = 'waifu-stub-live2d'; c.width=800; c.height=800;
+      canvasWrap.appendChild(c); stub.appendChild(tips); stub.appendChild(canvasWrap); document.body.appendChild(stub);
+      console.info('[waifu] inserted temporary stub nodes (non-conflicting ids) to avoid null refs');
+    }
+
+    function cleanupStub(){
+      var s = document.getElementById('waifu-stub'); if(s) try{ s.remove(); console.info('[waifu] removed waifu stub'); }catch(e){}
+      // also remove any lingering old elements with stub ids
+      var stTips = document.getElementById('waifu-stub-tips'); if(stTips) try{ stTips.remove(); }catch(e){}
+      var stCanvas = document.getElementById('waifu-stub-canvas'); if(stCanvas) try{ stCanvas.remove(); }catch(e){}
+      var stLive = document.getElementById('waifu-stub-live2d'); if(stLive) try{ stLive.remove(); }catch(e){}
+    }
+
+    // observe insertion of real #waifu and cleanup stub when it appears
+    var mo = new MutationObserver(function(muts){
+      if(document.getElementById('waifu')) cleanupStub();
+    });
+    mo.observe(document.body, {childList:true, subtree:true});
+
+    document.addEventListener('click', function(evt){
+      var btn = evt.target && evt.target.closest ? evt.target.closest('#waifu-toggle') : null;
+      if(!btn) return;
+      var existing = document.getElementById('waifu');
+      if(existing && existing.classList && existing.classList.contains('waifu-hidden')){
+        try{
+          // Force the original widget handler to run the "first-time" branch (which calls r(e) to recreate)
+          try{ btn.setAttribute('first-time','true'); }catch(e){}
+            ensureStub();
+            // wait for MutationObserver to detect new #waifu and cleanup; fallback removal after 2s
+            setTimeout(function(){ if(document.getElementById('waifu')){ if(existing.parentNode) try{ existing.remove(); console.info('[waifu] removed stale hidden #waifu after new inserted'); }catch(e){console.warn('[waifu] failed to remove stale #waifu', e);} } else {
+              if(existing && existing.parentNode) try{ existing.remove(); console.info('[waifu] removed stale hidden #waifu by fallback'); }catch(e){}
+            } }, 2000);
+        }catch(e){console.warn('[waifu] defensive handling failed', e);}          
+      }
+    }, true);
+  }catch(e){console.warn('[waifu] defensive click hook failed', e);}    
 })();
 </script><!-- Fallback: if no config_path provided, autoload.js may auto initialize using its own config--></div></body></html>
