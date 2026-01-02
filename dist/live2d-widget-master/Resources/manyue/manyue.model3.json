@@ -1,0 +1,1 @@
+{"Version":3,"FileReferences":{"Moc":"manyue.moc3","Textures":["manyue.4096/texture_00.png"],"Physics":"manyue.physics3.json","DisplayInfo":"manyue.cdi3.json"},"Groups":[{"Target":"Parameter","Name":"EyeBlink","Ids":[]},{"Target":"Parameter","Name":"LipSync","Ids":[]}]}
